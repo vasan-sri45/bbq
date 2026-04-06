@@ -13,6 +13,7 @@ const app = express();
 
 const allowlist = ["https://bbq-client.onrender.com","https://bbq-admin.onrender.com"];
 
+
 const corsOptions = {
   origin(origin, cb) {
     if (!origin || allowlist.includes(origin)) return cb(null, true);
