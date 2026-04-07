@@ -5,14 +5,12 @@ import { useState } from "react";
 
 export default function ProductModal({ onClose, product, onAddToCart }) {
   const [qty, setQty] = useState(1);
-
-  // ✅ store selections dynamically
   const [selectedOptions, setSelectedOptions] = useState({});
 
-  // ✅ FIXED PRICE
-  const basePrice = product?.price || product?.basePrice || 0;
+  // ✅ Base price
+  const basePrice = Number(product?.price || product?.basePrice || 0);
 
-  // ✅ HANDLE OPTION CHANGE
+  // ✅ Handle option change
   const handleOptionChange = (optionIndex, value, type) => {
     setSelectedOptions((prev) => {
       const updated = { ...prev };
@@ -33,7 +31,7 @@ export default function ProductModal({ onClose, product, onAddToCart }) {
     });
   };
 
-  // ✅ VALIDATION
+  // ✅ Validate required options
   const validateOptions = () => {
     for (let i = 0; i < (product?.options || []).length; i++) {
       const opt = product.options[i];
@@ -50,32 +48,47 @@ export default function ProductModal({ onClose, product, onAddToCart }) {
     return true;
   };
 
-  // ✅ CALCULATE TOTAL (WITH OPTION PRICES)
+  // ✅ FINAL PRICE CALCULATION (FIXED)
   const calculateTotal = () => {
     let total = basePrice;
 
     product?.options?.forEach((opt, i) => {
       const selected = selectedOptions[i];
-
       if (!selected) return;
 
+      // 🔥 SIZE → replace price
+      if (opt.title.toLowerCase().includes("size")) {
+        const item = opt.items.find((it) => it.name === selected);
+        if (item) {
+          total = Number(item.price);
+        }
+        return;
+      }
+
+      // 🔥 OTHER OPTIONS → add
       if (Array.isArray(selected)) {
         selected.forEach((val) => {
           const item = opt.items.find((it) => it.name === val);
-          total += item?.price || 0;
+          total += Number(item?.price || 0);
         });
       } else {
         const item = opt.items.find((it) => it.name === selected);
-        total += item?.price || 0;
+        total += Number(item?.price || 0);
       }
     });
 
-    return (total * qty).toFixed(2);
+    return total * qty;
+  };
+
+  // ✅ Format options for cart
+  const formatOptions = () => {
+    return Object.values(selectedOptions).map((opt) =>
+      Array.isArray(opt) ? opt : [opt]
+    );
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-
       <div className="bg-white w-full max-w-xl rounded-2xl flex flex-col max-h-[90vh] text-black">
 
         {/* HEADER */}
@@ -136,9 +149,15 @@ export default function ProductModal({ onClose, product, onAddToCart }) {
                         }
                       />
 
+                      {/* 🔥 FIXED PRICE DISPLAY */}
                       <span>
                         {item.name}
-                        {item.price > 0 && (
+
+                        {opt.title.toLowerCase().includes("size") ? (
+                          <span className="text-red-500 ml-2">
+                            £{item.price}
+                          </span>
+                        ) : item.price > 0 && (
                           <span className="text-red-500 ml-2">
                             +£{item.price}
                           </span>
@@ -160,7 +179,7 @@ export default function ProductModal({ onClose, product, onAddToCart }) {
 
           <div className="flex items-center gap-3">
 
-            
+            {/* Quantity */}
             <div className="flex items-center bg-gray-200 rounded-xl px-3 py-2 gap-4">
               <button
                 onClick={() => setQty((prev) => Math.max(1, prev - 1))}
@@ -179,16 +198,19 @@ export default function ProductModal({ onClose, product, onAddToCart }) {
               </button>
             </div>
 
-           
+            {/* ADD TO CART */}
             <button
               onClick={() => {
                 if (!validateOptions()) return;
 
+                const totalPrice = calculateTotal();
+
                 const cartItem = {
                   name: product.name,
-                  price: basePrice,
                   quantity: qty,
-                  options: selectedOptions,
+                  unitPrice: totalPrice / qty,
+                  price: totalPrice,
+                  options: formatOptions(),
                 };
 
                 console.log("Cart:", cartItem);
@@ -203,7 +225,7 @@ export default function ProductModal({ onClose, product, onAddToCart }) {
               </span>
 
               <span className="font-semibold">
-                £{calculateTotal()}
+                £{calculateTotal().toFixed(2)}
               </span>
             </button>
 
@@ -215,3 +237,4 @@ export default function ProductModal({ onClose, product, onAddToCart }) {
     </div>
   );
 }
+

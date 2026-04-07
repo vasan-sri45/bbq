@@ -7,6 +7,7 @@ const nextConfig = {
       {
         source: "/api/:path*", // frontend
         destination: "https://bbq-server-yyh9.onrender.com/api/:path*", // backend
+        // destination: "http://localhost:4500/api/:path*"
       },
     ];
   },

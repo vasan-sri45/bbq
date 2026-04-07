@@ -5,21 +5,33 @@ import { Heart } from "lucide-react";
 import ProductModal from "./ProductModel";
 import { useGetProducts } from "../../hooks/useMenuMutation";
 
-export default function ProductList({ onAddToCart, search = "" }) {
+export default function ProductList({ onAddToCart, search = "", filters }) {
   const [openModal, setOpenModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const { data, isLoading } = useGetProducts();
 
-  // ✅ Extract API products
   const products = data?.data || [];
 
-  // 🔥 FILTER (optimized)
+  // ✅ FILTER LOGIC
   const filteredProducts = useMemo(() => {
-    return products.filter((item) =>
-      item.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [products, search]);
+    return products.filter((item) => {
+      const price = item.price ?? item.basePrice ?? 0;
+
+      const matchesSearch = item.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchesPrice =
+        price >= filters.min && price <= filters.max;
+
+      const matchesVeg = filters.veg
+        ? item.isVeg === true // ⚠️ make sure backend has this field
+        : true;
+
+      return matchesSearch && matchesPrice && matchesVeg;
+    });
+  }, [products, search, filters]);
 
   if (isLoading) {
     return <p className="p-6">Loading products...</p>;
@@ -59,7 +71,6 @@ export default function ProductList({ onAddToCart, search = "" }) {
             No products found 😢
           </p>
         )}
-
       </div>
 
       {openModal && (

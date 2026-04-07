@@ -9,34 +9,45 @@ export default function OrderPanel({ cart, setCart }) {
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
-  // ➕ Increase quantity
-  const increaseQty = (index) => {
-    setCart((prev) => {
-      const updated = [...prev];
-      const unitPrice = updated[index].price / updated[index].quantity;
+const increaseQty = (index) => {
+  setCart((prev) => {
+    return prev.map((item, i) => {
+      if (i !== index) return item;
 
-      updated[index].quantity += 1;
-      updated[index].price += unitPrice;
+      const unitPrice =
+        item.unitPrice || item.price / item.quantity;
 
-      return updated;
+      return {
+        ...item, // ✅ new object
+        unitPrice,
+        quantity: item.quantity + 1,
+        price: (item.quantity + 1) * unitPrice,
+      };
     });
-  };
+  });
+  
+};
+console.log(cart)
 
-  // ➖ Decrease quantity
-  const decreaseQty = (index) => {
-    setCart((prev) => {
-      const updated = [...prev];
+const decreaseQty = (index) => {
+  setCart((prev) => {
+    return prev.map((item, i) => {
+      if (i !== index) return item;
 
-      if (updated[index].quantity === 1) return updated;
+      if (item.quantity === 1) return item;
 
-      const unitPrice = updated[index].price / updated[index].quantity;
+      const unitPrice =
+        item.unitPrice || item.price / item.quantity;
 
-      updated[index].quantity -= 1;
-      updated[index].price -= unitPrice;
-
-      return updated;
+      return {
+        ...item,
+        unitPrice,
+        quantity: item.quantity - 1,
+        price: (item.quantity - 1) * unitPrice,
+      };
     });
-  };
+  });
+};
 
   // ❌ Remove item
   const removeItem = (index) => {
@@ -92,22 +103,33 @@ export default function OrderPanel({ cart, setCart }) {
               </div>
 
               {/* Options */}
-            
-              <div className="text-sm text-gray-500 mt-1">
-  {Array.isArray(item.options) ? (
-    item.options.map((opt, idx) => {
-      if (!opt || (Array.isArray(opt) && opt.length === 0)) return null;
+            <div className="text-sm text-gray-500 mt-1">
+              {item.options && (
+                Array.isArray(item.options) ? (
+                  item.options.map((opt, idx) => {
+                    if (!opt || (Array.isArray(opt) && opt.length === 0)) return null;
 
-      return (
-        <p key={idx}>
-          {Array.isArray(opt) ? opt.join(", ") : opt}
-        </p>
-      );
-    })
-  ) : (
-    <p className="text-red-400">Invalid options</p>
-  )}
-</div>
+                    return (
+                      <p key={idx}>
+                        {Array.isArray(opt) ? opt.join(", ") : String(opt)}
+                      </p>
+                    );
+                  })
+                ) : typeof item.options === "object" ? (
+                  Object.values(item.options).map((opt, idx) => (
+                    <p key={idx}>
+                      {Array.isArray(opt) ? opt.join(", ") : String(opt)}
+                    </p>
+                  ))
+                ) : (
+                  <p>{String(item.options)}</p>
+                )
+              )}
+
+              {!item.options || (Array.isArray(item.options) && item.options.length === 0) ? (
+                <p className="text-gray-400">No options selected</p>
+              ) : null}
+            </div>
 
  {/* Extras */}
            
@@ -115,16 +137,16 @@ export default function OrderPanel({ cart, setCart }) {
               <div className="flex items-center gap-3 mt-3">
                 <button
                   onClick={() => decreaseQty(i)}
-                  className="px-3 py-1 bg-gray-200 rounded"
+                  className="px-3 py-1 bg-gray-200 rounded text-black"
                 >
                   -
                 </button>
 
-                <span>{item.quantity}</span>
+                <span className="text-black">{item.quantity}</span>
 
                 <button
                   onClick={() => increaseQty(i)}
-                  className="px-3 py-1 bg-gray-200 rounded"
+                  className="px-3 py-1 bg-gray-200 rounded text-black"
                 >
                   +
                 </button>
@@ -155,3 +177,4 @@ export default function OrderPanel({ cart, setCart }) {
     </div>
   );
 }
+

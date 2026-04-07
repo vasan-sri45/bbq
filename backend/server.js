@@ -11,7 +11,7 @@ import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
-const allowlist = ["https://bbq-client.onrender.com","https://bbq-admin.onrender.com"];
+const allowlist = ["https://bbq-client.onrender.com","https://bbq-admin.onrender.com","http://localhost:3000"];
 
 
 const corsOptions = {
